@@ -29,7 +29,7 @@ class OCR_Model():
 
 	def Create_model(self):
 		Model = Sequential([
-			Dense(100)
+			Dense(10)
 		])
 		Model.summary()
 		Model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'] )
