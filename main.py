@@ -23,7 +23,7 @@ from Dataseter import Create_dataset
 from Create_OCR_Model import OCR_Model
 from DATASETGENERATE import Start_gen
 def Chain_functions():
-	Start_gen()
+	Dataset = Start_gen()
 	# train, validation = Create_dataset().Get_data()
 	# history = OCR_Model(train, validation).Train_model()
 

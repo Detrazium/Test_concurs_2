@@ -22,10 +22,9 @@ Input
 )
 
 class OCR_Model():
-	def __init__(self, Train_, Val_):
+	def __init__(self, Datas):
 		self.model = self.Create_model()
-		self.Train = Train_
-		self.Val = Val_
+		self.Train = Datas
 
 	def Create_model(self):
 		Model = Sequential([
@@ -35,7 +34,7 @@ class OCR_Model():
 		Model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'] )
 		return Model
 	def Train_model(self):
-		history = self.model.fit(self.Train, validation_data=self.Val, epochs=5, batch_size=32)
+		history = self.model.fit(self.Train, epochs=5, batch_size=32)
 		return history
 
 
