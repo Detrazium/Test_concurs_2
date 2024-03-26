@@ -19,13 +19,15 @@ path = r"C:\Datasets\Pasports"
 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 """
 
-from Dataseter import Create_dataset
 from Create_OCR_Model import OCR_Model
 from DATASETGENERATE import Start_gen
+from Val_gen_split import Validat_split
+
 def Chain_functions():
 	Dataset = Start_gen()
-	# train, validation = Create_dataset().Get_data()
-	# history = OCR_Model(train, validation).Train_model()
+	train, val = Validat_split(Dataset).splitD()
+	history = OCR_Model(train, val).Train_model()
+
 
 
 def main():

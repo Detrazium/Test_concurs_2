@@ -3,6 +3,9 @@
 Generation_token
 |||||||||||||||||||||||||||||||||||||||||||||||||||||
 """
+import keras.utils
+
+
 class OCR_TOKEN():
 	def __init__(self):
 		self.token = self.readTK()
@@ -22,6 +25,9 @@ class OCR_TOKEN():
 		 130: 'м', 131: 'й', 132: '1', 133: 'g'
 		}
 		return token_add
+	def cat_token(self):
+		x = keras.utils.to_categorical(range(134), num_classes=134)
+		return x
 	def Cyrillic_pattern(self, x=None):
 		Muder = "©:;…’'«»∞\xa0!@#$%^&*()_+-{}[]'\"|/<>~`"
 		pattern = {0: 'А', 1: 'Б', 2: 'В',
@@ -39,4 +45,10 @@ class OCR_TOKEN():
 	def Decoding(self, keys):
 		string = ''.join([self.token[int(i)] for i in keys])
 		return string.rstrip()
+
+def main():
+	Tk = OCR_TOKEN().readTK()
+	print(len(Tk))
+if __name__ == '__main__':
+	main()
 
