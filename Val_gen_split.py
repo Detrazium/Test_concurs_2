@@ -11,9 +11,9 @@ class Validat_split():
 		self.Data = Dataset
 	def splitD(self):
 		X, Y = self.Data
+		print(*X[0])
 		X = X / 255
-		Y = Y / 133
-		# Y = keras.utils.to_categorical(Y, num_classes=134)
+		Y = keras.utils.to_categorical(Y, num_classes=33)
 		Trip = (len(X) * 20) // 100
 		X_train = X[Trip:]
 		Y_train = Y[Trip:]
