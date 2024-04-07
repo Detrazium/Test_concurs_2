@@ -22,35 +22,39 @@ def strips_liters(imgs):
 			lef = imgs[:, :h]
 			imgs = imgs[:, h:]
 			staper.append(lef)
-			cv2.imshow(f'lefter part_|clip|: {el}', lef)
-
-		cv2.waitKey()
+		# 	cv2.imshow(f'lefter part_|clip|: {el}', lef)
+		#
+		# cv2.waitKey()
 		print(cater, '|__CATER__|')
 
 	staper.append(imgs)
 
-	cv2.imshow('lefter part', lefter)
-	cv2.imshow('righter', imgs)
-	cv2.waitKey()
+	# cv2.imshow('lefter partCL', lefter)
+	# cv2.imshow('righterCL', imgs)
+	# cv2.waitKey()
 	return staper
 
 def Litary_detect(image):
-	"""Разделение букв"""
+	"""Разделение и нахождение букв"""
 	img =image.copy()
 	gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 	kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (23, 23))
 	blacked = cv2.morphologyEx(gray, cv2.MORPH_BLACKHAT, kernel)
 	trash = cv2.threshold(blacked, 120, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)[1]
 
-	conturs,_ = cv2.findContours(trash, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+	conturs,_ = cv2.findContours(trash, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 	cv2.drawContours(image, conturs, -1, (0, 255, 0), 1)
-
 	word = []
 	for cont in conturs:
 		x, y, w, h = cv2.boundingRect(cont)
+
 		rel = trash[y: y+h, x: x+w]
+		rel = cv2.bitwise_not(rel)
+		rel = cv2.dilate(rel, (2, 2), iterations=6)
 		if rel.shape[0] > 35:
-			print(rel.shape)
+			"""there"""
+			# cv2.imshow('ISNT_REL', rel)
+			# cv2.waitKey()
 
 			"""Literaly = rel"""
 			rel = imutils.resize(rel, height=80)
@@ -62,16 +66,19 @@ def Litary_detect(image):
 					word.append(litera)
 			else:
 				word.append(rel)
-				cv2.imshow('REL', rel)
-				print(rel.shape, '|RELSHAPE|')
-				cv2.waitKey()
+				# cv2.imshow('REL', rel)
+				# print(rel.shape, '|RELSHAPE|')
+				# cv2.waitKey()
 		cv2.destroyAllWindows()
 
-	cv2.imshow('key', trash)
-	cv2.waitKey()
-	cv2.imshow('key', image)
-	cv2.waitKey()
-	cv2.destroyAllWindows()
+	# cv2.imshow('keyDET', trash)
+	# cv2.waitKey()
+	# cv2.imshow('keyDET', image)
+	# cv2.waitKey()
+	# cv2.destroyAllWindows()
+	return word
+
+
 
 
 
@@ -102,6 +109,7 @@ def Words_detected(image):
 	cv2.drawContours(img, cnt, -1, (0, 255, 0),1, cv2.LINE_AA)
 	cnt = sorted(cnt, key = cv2.contourArea, reverse=True)
 	rois = []
+	words = []
 	for c in cnt:
 		(x, y, w, h) = cv2.boundingRect(c)
 		ar = w/float(h)
@@ -118,23 +126,64 @@ def Words_detected(image):
 			# """То с чем дальше работать roi"""
 			roi = cv2.resize(roi, (roi.shape[1]*3, roi.shape[0]*3))
 
-			cv2.imshow('image', roi)
-			cv2.waitKey()
-			Litary_detect(roi)
+			# cv2.imshow('imageROI', roi)
+			# cv2.waitKey()
 
-	cv2.imshow('Image', image)
-	cv2.imwrite('img.png', image)
-	cv2.waitKey()
+			text_word = Litary_detect(roi)
+			words.append(text_word)
 
+	# cv2.imshow('Image', image)
+	# cv2.imwrite('img.png', image)
+	# cv2.waitKey()
+	return words
+
+
+def buFfer(el):
+	bsize = 30
+	el = cv2.resize(el, (80, 80))
+	bord = cv2.copyMakeBorder(
+		el,
+		top=bsize,
+		bottom=bsize,
+		left=bsize,
+		right=bsize,
+		borderType=cv2.BORDER_CONSTANT,
+		value=[255, 255, 255]
+	)
+	for ell in range(2):
+		bord = cv2.erode(bord, None, iterations=1)
+	bord = cv2.GaussianBlur(bord, (3, 3), 0)
+	cv2.imshow('TESTed', bord)
+	el = cv2.resize(bord, (28, 28))
+	el = np.expand_dims(el, axis=0)
+	return el, bord
 
 def Pip_main(image):
-	Words_detected(image)
+	words = Words_detected(image)
+	return words
 
 def main():
+	"""Test code to programm"""
+	import keras
+	import numpy as np
+	from Token_word import OCR_TOKEN
+	model = keras.models.load_model(r'C:\Users\Антонио\PycharmProjects\Test_concurs\OCR_models\test_model_ocr_recovVV3.h5')
 	for i in k:
-		print(i)
-		# if i == '\\4.png':
-		Pip_main(file + i)
+		w = Pip_main(file + i)
+		for l in w:
+			f = ''
+			for el in l:
+				bel, bord = buFfer(el)
+				detect = model(bel)
+				s = np.argmax(detect)
+				item = OCR_TOKEN(s).get_lit()
+				f += item
+				print(s+1, ' | ',item)
+				cv2.waitKey()
+			f += '\n'
+			print(f)
+
+
 
 
 if __name__ == '__main__':

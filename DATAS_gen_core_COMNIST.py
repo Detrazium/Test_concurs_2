@@ -1,4 +1,5 @@
 collection = r"C:\Datasets\Cyrillic"
+cyrril = 'АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЬЫЪЭЮЯ'
 
 import os
 import cv2
@@ -6,28 +7,110 @@ from PIL import Image
 from skimage import transform
 from skimage.transform import AffineTransform, warp, rotate
 import numpy as np
+import shutil
 class Generate_dataset():
 	def __init__(self):
-		self.Cyr = r"C:\Datasets\Cyrillic"
+		# self.Cyr = r"C:\Datasets\Cyrillic"
 		self.Ncyr = r"C:\Datasets\New_cyrrilic"
+		self.NC_pech = r"C:\Datasets\NC_Ppech"
 
 		"""Test fragment"""
+		# self.Create_catalofert(self.NC_pech)
+		self.Movered_pech()
+		# self.Regrite_XMS_Trash(self.NC_pech)
+		# self.shift_image(self.NC_pech)
+		# self.create_cataloger()
 		# self.delete_alpha()
 		# self.rename_objects()
-		# self.generate_next_data(self.Ncyr)
-		# self.GG()
+		# self.generate_next_data(self.NC_pech)
+		# self.GG(self.NC_pech)
 
-	def GG(self):
-		data = self.Ncyr
+	def Create_catalofert(self, data):
+		for i in range(1, 34):
+			os.mkdir(data + f'\\{i}')
+
+	def Movered_pech(self):
+		ccclip = ['10', '12', '13', '14', '15', '16']
+
+		DInto = self.Ncyr
+		Dout = self.NC_pech
+		for col1, col2 in zip(os.listdir(Dout), os.listdir(DInto)):
+			out = Dout + f'\\{col1}'
+			into = DInto + f'\\{col1}'
+			l = 0
+			k = 0
+			if col1 in ccclip:
+				for img in os.listdir(out):
+					if k%12 == 0:
+						l+=1
+						shutil.move(os.path.join(out, img), into)
+					k += 1
+				print(f'  {col1}:|CLASS|: moved to: {l}')
+			else:
+				for img in os.listdir(out):
+					k+=1
+					shutil.move(os.path.join(out, img), into)
+				print(f'  {col1}:|CLASS|: moved to: {k} END_OK')
+	def Regrite_XMS_Trash(self, data):
+		for colections in os.listdir(data):
+			kk = ['3', '4', '8', '5', '9']
+			if colections in kk:
+				new_data = data + f'\\{colections}'
+				for img in os.listdir(new_data):
+					image = new_data + f'\\{img}'
+					if 'копия' not in image:
+						fwe = image.split('.')[0]
+						image = cv2.imread(image)
+						image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+						for i in range(100):
+							image = cv2.resize(image, (150, 150))
+							image = cv2.resize(image, (278, 278))
+							if i%10 == 0:
+								image = cv2.erode(image, None, iterations=1)
+							# cv2.imshow('file', image)
+							# cv2.waitKey()
+
+							cv2.imwrite(fwe + f'ErodietPech_({i})_.jpeg', image)
+
+	def shift_image(self, data):
+		arr_trans = [[15, -15], [-15, 15], [-15, -15],
+					 [15, 15], [16, 14], [-14, 14],
+					 [17, 14], [-16, 16], [16, -16],
+					 [16, 16]]
+		for colections in os.listdir(data):
+			new_data = data + f'\\{colections}'
+			for img in os.listdir(new_data):
+				image = new_data + f'\\{img}'
+				if 'копия' not in image:
+					flt_tgr = image.split('.')[0]
+					image = cv2.imread(image)
+					for i in range(10):
+						trans = AffineTransform(translation=tuple(arr_trans[i]))
+						warper = warp(image, trans, mode='wrap')
+						img_conv = cv2.convertScaleAbs(warper, alpha=(255.0))
+						cv2.imwrite(flt_tgr + f'{i}_transform_.jpeg', img_conv)
+
+	def create_cataloger(self):
+		from PIL import ImageDraw, Image, ImageFont
+		for i, l in zip(range(1, 34), cyrril):
+			font = ImageFont.truetype("C:\Windows\Fonts\Georgia.ttf", size=180)
+			img = Image.new("RGB", (278, 278), color=(255, 255, 255))
+			draw = ImageDraw.Draw(img)
+			draw.text((60, 40), l, fill=(0, 0, 0), font=font)
+			img.save(self.NC_pech + f'\\{i}' +f'\\{i}.jpeg')
+			pass
+
+	def GG(self, data):
 		k = 0
 		for colections in os.listdir(data):
-			new_datA = data + f'\\{colections}'
-			for img in os.listdir(new_datA):
-				k += 1
-				print(k)
+			if colections == '28':
+				new_datA = data + f'\\{colections}'
+				for img in os.listdir(new_datA):
+					if 'копия' not in img:
+						k += 1
+						print(k)
 
-	def balanced_image(self):
-		data = self.Ncyr
+	def balanced_image(self, data):
 		for classes in os.listdir(data):
 			new_D = data + f'\\{classes}'
 			for image in new_D:
@@ -40,13 +123,14 @@ class Generate_dataset():
 			new_data = data + f'\\{colections}'
 			for img in os.listdir(new_data):
 				image = new_data + f'\\{img}'
-				fwe = image.split('.')[0]
-				image = Image.open(image)
-				annef = np.ndarray((2,), buffer= np.array([-13, 13]), dtype=int)
+				if 'копия' not in image:
+					fwe = image.split('.')[0]
+					image = Image.open(image)
+					annef = np.ndarray((2,), buffer= np.array([-13, 13]), dtype=int)
 
-				for iter in annef:
-					trans = transform.rotate(np.array(image), iter, cval=255, preserve_range=True).astype(np.uint8)
-					cv2.imwrite(fwe + 'rotate.jpeg', trans)
+					for iter in annef:
+						trans = transform.rotate(np.array(image), iter, cval=255, preserve_range=True).astype(np.uint8)
+						cv2.imwrite(fwe + 'rotateDTD.jpeg', trans)
 
 
 	def delete_alpha(self):

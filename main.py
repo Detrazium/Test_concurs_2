@@ -29,7 +29,7 @@ def Chain_functions():
 
 	Dataset = Create_dataset().Get_data()
 	train, val = Dataset
-	history = OCR_Model(train, val).Train_model()
+	# history = OCR_Model(train, val).Train_model()
 
 
 
