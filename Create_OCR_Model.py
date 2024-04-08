@@ -28,8 +28,7 @@ class OCR_Model():
 
 	def Train_clip(self):
 		return
- 	def Create_model(self):
-		checkpoints = keras.callbacks.ModelCheckpoint()
+	def Create_model(self):
 
 		Model = Sequential([
 			Conv2D(32, (3, 3), padding = 'same', input_shape=(28, 28, 1), activation='relu'),

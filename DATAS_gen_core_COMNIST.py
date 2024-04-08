@@ -16,7 +16,7 @@ class Generate_dataset():
 
 		"""Test fragment"""
 		# self.Create_catalofert(self.NC_pech)
-		self.Movered_pech()
+		# self.Movered_pech()
 		# self.Regrite_XMS_Trash(self.NC_pech)
 		# self.shift_image(self.NC_pech)
 		# self.create_cataloger()
