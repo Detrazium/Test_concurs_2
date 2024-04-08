@@ -6,34 +6,53 @@ k = ["\\0.jpeg","\\1.jpeg","\\2.jpeg","\\3.jpeg","\\4.png",
 	 "\\5.jpeg","\\6.jpeg",'\\7.jpeg', '\\8.jpeg', '\\9.jpeg']
 file = r"C:\Datasets\Pasports"
 
-
+def TF_CV(image):
+	cv2.imshow('TESTEROIDING', image)
+	cv2.waitKey()
 
 def strips_liters(imgs):
-	print(imgs.shape, '|UNIT|')
+	# print(imgs.shape, '|UNIT|')
 	staper = []
-	cater = imgs.shape[1] // imgs.shape[0]
 	h, w = imgs.shape
-	lefter = imgs[:, :h]
-	imgs = imgs[:, h:]
+	cater = w // h
+	# print(cater, 'RCATERRR')
+
+	if w < h*2:
+		hh = w//2
+		lefter = imgs[:, :hh]
+		imgs = imgs[:, hh:]
+	else:
+		lefter = imgs[:, :h]
+		imgs = imgs[:, h:]
 
 	staper.append(lefter)
 	if imgs.shape[1] > imgs.shape[0] + imgs.shape[0] // 2:
+		# imgs = cv2.erode(imgs, None, iterations=2)
 		for el in range(cater - 1):
+			h = w // round(w / h)
 			lef = imgs[:, :h]
 			imgs = imgs[:, h:]
 			staper.append(lef)
+		# 	print(lef.shape)
 		# 	cv2.imshow(f'lefter part_|clip|: {el}', lef)
+		# 	print(lef.shape)
 		#
 		# cv2.waitKey()
-		print(cater, '|__CATER__|')
+		# print(cater, '|__CATER__|')
 
 	staper.append(imgs)
-
+	#
 	# cv2.imshow('lefter partCL', lefter)
 	# cv2.imshow('righterCL', imgs)
 	# cv2.waitKey()
 	return staper
 
+def sort_conturs_litera(cnt, method='rig-lig'):
+	reverse = False
+	i = 0
+	bound_rect = [cv2.boundingRect(el) for el in cnt]
+	(cnt, bound_rect) = zip(*sorted(zip(cnt, bound_rect), key=lambda b:b[1][i], reverse=reverse))
+	return cnt
 def Litary_detect(image):
 	"""Разделение и нахождение букв"""
 	img =image.copy()
@@ -44,13 +63,20 @@ def Litary_detect(image):
 
 	conturs,_ = cv2.findContours(trash, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 	cv2.drawContours(image, conturs, -1, (0, 255, 0), 1)
+
+	conturs = sort_conturs_litera(conturs)
+
+
 	word = []
 	for cont in conturs:
 		x, y, w, h = cv2.boundingRect(cont)
 
 		rel = trash[y: y+h, x: x+w]
 		rel = cv2.bitwise_not(rel)
-		rel = cv2.dilate(rel, (2, 2), iterations=6)
+		rel = cv2.dilate(rel, (1, 1), iterations=2)
+
+		# TF_CV(rel)
+
 		if rel.shape[0] > 35:
 			"""there"""
 			# cv2.imshow('ISNT_REL', rel)
@@ -66,11 +92,11 @@ def Litary_detect(image):
 					word.append(litera)
 			else:
 				word.append(rel)
-				# cv2.imshow('REL', rel)
-				# print(rel.shape, '|RELSHAPE|')
-				# cv2.waitKey()
-		cv2.destroyAllWindows()
-
+	# 			cv2.imshow('REL', rel)
+	# 			print(rel.shape, '|RELSHAPE|')
+	# 			cv2.waitKey()
+	# 	cv2.destroyAllWindows()
+	#
 	# cv2.imshow('keyDET', trash)
 	# cv2.waitKey()
 	# cv2.imshow('keyDET', image)
@@ -121,17 +147,16 @@ def Words_detected(image):
 			(w, h) = (w +(pX * 2), h + (pY * 2))
 			roi = image[y : y + h, x:x + w].copy()
 			rois.append(roi)
-			# cv2.rectangle(image, (x, y), (x + w, y+h), (0, 255, 0), 2)
 
 			# """То с чем дальше работать roi"""
 			roi = cv2.resize(roi, (roi.shape[1]*3, roi.shape[0]*3))
-
+			#
 			# cv2.imshow('imageROI', roi)
 			# cv2.waitKey()
 
 			text_word = Litary_detect(roi)
 			words.append(text_word)
-
+	#
 	# cv2.imshow('Image', image)
 	# cv2.imwrite('img.png', image)
 	# cv2.waitKey()
@@ -153,7 +178,7 @@ def buFfer(el):
 	for ell in range(2):
 		bord = cv2.erode(bord, None, iterations=1)
 	bord = cv2.GaussianBlur(bord, (3, 3), 0)
-	cv2.imshow('TESTed', bord)
+	# cv2.imshow('TESTed', bord)
 	el = cv2.resize(bord, (28, 28))
 	el = np.expand_dims(el, axis=0)
 	return el, bord
@@ -167,21 +192,24 @@ def main():
 	import keras
 	import numpy as np
 	from Token_word import OCR_TOKEN
+	import time
 	model = keras.models.load_model(r'C:\Users\Антонио\PycharmProjects\Test_concurs\OCR_models\test_model_ocr_recovVV3.h5')
 	for i in k:
-		w = Pip_main(file + i)
-		for l in w:
-			f = ''
-			for el in l:
-				bel, bord = buFfer(el)
-				detect = model(bel)
-				s = np.argmax(detect)
-				item = OCR_TOKEN(s).get_lit()
-				f += item
-				print(s+1, ' | ',item)
-				cv2.waitKey()
-			f += '\n'
-			print(f)
+		if '9' in i:
+			w = Pip_main(file + i)
+			for l in w:
+				f = ''
+				for el in l:
+					bel, bord = buFfer(el)
+					detect = model(bel)
+					s = np.argmax(detect)
+					item = OCR_TOKEN(s).get_lit()
+					f += item
+					# print(s+1, ' | ',item)
+					# cv2.waitKey()
+				f += '\n'
+				print(f)
+				time.sleep(2)
 
 
 
