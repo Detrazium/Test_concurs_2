@@ -8,7 +8,45 @@ from skimage import transform
 from skimage.transform import AffineTransform, warp, rotate
 import numpy as np
 import shutil
+from Token_word import OCR_TOKEN
 class Generate_dataset():
+	"""
+	Gen to need min(115 000):
+	49203 |Catalog to| А!
+	112232 |Catalog to| И!
+	63984 |Catalog to| Й!
+	118017 |Catalog to| К
+	68864 |Catalog to| Л!
+	93968 |Catalog to| М!
+	115358 |Catalog to| Н
+	120478 |Catalog to| О
+	22424 |Catalog to| П!
+	35718 |Catalog to| Р!
+	34604 |Catalog to| С!
+	20654 |Catalog to| Б!
+	24692 |Catalog to| Т!
+	21468 |Catalog to| У!
+	25740 |Catalog to| Ф!
+	37356 |Catalog to| Х!
+	25410 |Catalog to| Ц!
+	36872 |Catalog to| Ч!
+	22814 |Catalog to| Ш!
+	23144 |Catalog to| Щ!
+	43428 |Catalog to| Ъ!
+	24684 |Catalog to| Ы!
+	101816 |Catalog to| В!
+	18282 |Catalog to| Ь!
+	18964 |Catalog to| Э!
+	25696 |Catalog to| Ю!
+	36300 |Catalog to| Я!
+	95986 |Catalog to| Г!
+	79112 |Catalog to| Д!
+	22784 |Catalog to| Е!
+	16456 |Catalog to| Ё!
+	36828 |Catalog to| Ж!
+	33924 |Catalog to| З!
+	"""
+
 	def __init__(self):
 		# self.Cyr = r"C:\Datasets\Cyrillic"
 		self.Ncyr = r"C:\Datasets\New_cyrrilic"
@@ -24,6 +62,16 @@ class Generate_dataset():
 		# self.rename_objects()
 		# self.generate_next_data(self.NC_pech)
 		# self.GG(self.NC_pech)
+		self.Coll_catag(self.Ncyr)
+
+	def Coll_catag(self, data):
+		for catalog in os.listdir(data):
+			new_data = data+ '\\' + catalog
+			k=0
+			for img in os.listdir(new_data):
+				k+=1
+			print(f'{k} |Catalog to| {OCR_TOKEN(int(catalog)-1).get_lit()}')
+
 
 	def Create_catalofert(self, data):
 		for i in range(1, 34):
@@ -43,13 +91,13 @@ class Generate_dataset():
 				for img in os.listdir(out):
 					if k%12 == 0:
 						l+=1
-						shutil.move(os.path.join(out, img), into)
+						# shutil.move(os.path.join(out, img), into)
 					k += 1
 				print(f'  {col1}:|CLASS|: moved to: {l}')
 			else:
 				for img in os.listdir(out):
 					k+=1
-					shutil.move(os.path.join(out, img), into)
+					# shutil.move(os.path.join(out, img), into)
 				print(f'  {col1}:|CLASS|: moved to: {k} END_OK')
 	def Regrite_XMS_Trash(self, data):
 		for colections in os.listdir(data):

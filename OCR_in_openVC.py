@@ -21,11 +21,9 @@ class OCR_Model_find_litary():
 	def get_items(self):
 		return self.ITEMS
 	def strips_liters(self, imgs):
-		# print(imgs.shape, '|UNIT|')
 		staper = []
 		h, w = imgs.shape
 		cater = w // h
-		# print(cater, 'RCATERRR')
 
 		if w < h*2:
 			hh = w//2
@@ -37,27 +35,15 @@ class OCR_Model_find_litary():
 
 		staper.append(lefter)
 		if imgs.shape[1] > imgs.shape[0] + imgs.shape[0] // 2:
-			# imgs = cv2.erode(imgs, None, iterations=2)
 			for el in range(cater - 1):
 				h = w // round(w / h)
 				lef = imgs[:, :h]
 				imgs = imgs[:, h:]
 				staper.append(lef)
-			# 	print(lef.shape)
-			# 	cv2.imshow(f'lefter part_|clip|: {el}', lef)
-			# 	print(lef.shape)
-			#
-			# cv2.waitKey()
-			# print(cater, '|__CATER__|')
-
 		staper.append(imgs)
-		#
-		# cv2.imshow('lefter partCL', lefter)
-		# cv2.imshow('righterCL', imgs)
-		# cv2.waitKey()
 		return staper
 
-	def sort_conturs_litera(self, cnt, method='rig-lig'):
+	def sort_conturs_litera(self, cnt):
 		reverse = False
 		i = 0
 		bound_rect = [cv2.boundingRect(el) for el in cnt]
@@ -88,10 +74,6 @@ class OCR_Model_find_litary():
 			# TF_CV(rel)
 
 			if rel.shape[0] > 35:
-				"""there"""
-				# cv2.imshow('ISNT_REL', rel)
-				# cv2.waitKey()
-
 				"""Literaly = rel"""
 				rel = imutils.resize(rel, height=80)
 				cat = rel.shape[0] / 2
@@ -102,16 +84,6 @@ class OCR_Model_find_litary():
 						word.append(litera)
 				else:
 					word.append(rel)
-		# 			cv2.imshow('REL', rel)
-		# 			print(rel.shape, '|RELSHAPE|')
-		# 			cv2.waitKey()
-		# 	cv2.destroyAllWindows()
-		#
-		# cv2.imshow('keyDET', trash)
-		# cv2.waitKey()
-		# cv2.imshow('keyDET', image)
-		# cv2.waitKey()
-		# cv2.destroyAllWindows()
 		return word
 
 
@@ -138,6 +110,9 @@ class OCR_Model_find_litary():
 		treshold = cv2.threshold(gradinX, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)[1]
 		treshold = cv2.morphologyEx(treshold, cv2.MORPH_DILATE, np.ones((1, 2), np.uint8))
 
+		cv2.imshow('image', treshold)
+		cv2.waitKey()
+
 		p = int(image.shape[1] * 0.05)
 		treshold[:, 0:p]= 0
 		treshold[:, image.shape[1] - p:] = 0
@@ -158,18 +133,12 @@ class OCR_Model_find_litary():
 				roi = image[y : y + h, x:x + w].copy()
 				rois.append(roi)
 
-				# """То с чем дальше работать roi"""
 				roi = cv2.resize(roi, (roi.shape[1]*3, roi.shape[0]*3))
-				#
-				# cv2.imshow('imageROI', roi)
-				# cv2.waitKey()
+
 
 				text_word = self.Litary_detect(roi)
 				words.append(text_word)
-		#
-		# cv2.imshow('Image', image)
-		# cv2.imwrite('img.png', image)
-		# cv2.waitKey()
+
 		return words
 
 
@@ -188,7 +157,6 @@ class OCR_Model_find_litary():
 		for ell in range(2):
 			bord = cv2.erode(bord, None, iterations=1)
 		bord = cv2.GaussianBlur(bord, (3, 3), 0)
-		# cv2.imshow('TESTed', bord)
 		el = cv2.resize(bord, (28, 28))
 		el = np.expand_dims(el, axis=0)
 		return el, bord
@@ -211,11 +179,7 @@ class OCR_Model_find_litary():
 				s = np.argmax(detect)
 				item = OCR_TOKEN(s).get_lit()
 				items += item
-			# print(s+1, ' | ',item)
-			# cv2.waitKey()
 			items += '\n'
-			# print(f)
-			time.sleep(2)
 		return items
 
 def main():
