@@ -79,7 +79,6 @@ class Doc_Read():
 
 		img = cv2.erode(img, self.KernelUp, iterations=3)
 		img = cv2.erode(img, self.KernelUpOne, iterations=15)
-		thr = img.copy()
 
 		img = self.bord_app(img, size=30)
 		image = self.bord_app(image, size=30)
@@ -115,15 +114,17 @@ class Doc_Read():
 	def read_litera(self, word):
 		texts = ''
 
-		res = imutils.resize(word, height=278)
-		img_org = res.copy()
+		res1 = imutils.resize(word, height=278)
 
-		cv2.GaussianBlur(res, (3, 3), 0)
+		res = cv2.GaussianBlur(res1, (3, 3), 0)
 		res = cv2.dilate(res, self.KernelXshare, iterations=1)
-		res = cv2.erode(res, self.KernelUp, iterations=3)
-		res = self.bord_app(res, size=2)
+		res = cv2.erode(res, self.KernelUpOne, iterations=20)
+
+		res = self.bord_app(res, size=20)
+		img_org = self.bord_app(res1.copy(), size= 20)
 
 		_,Trash =cv2.threshold(res, 180, 200, cv2.THRESH_BINARY)
+
 		cont,_ =cv2.findContours(Trash, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
 		cont = self.dock_sort_list(cont)
@@ -131,11 +132,15 @@ class Doc_Read():
 		for con in cont:
 			x, y, w, h =cv2.boundingRect(con)
 			img = img_org[y:y+h, x:x+w]
+			img = imutils.resize(img, height=205)
 			w1, w2 = img.shape
-			if 190<w1<250 and 80 < w2:
-				"""|UNIT|"""
-				if w2 > w1*1.3:
+			cv2.imshow('img', img)
+			if 80 < w2 < 390:
+				if w2 > w1*0.9:
 					litera = self.Strip_one(img)
+
+					'''CLIPED TO WORK!'''
+
 				else:
 					litera = self.find(img)
 				texts += litera
@@ -143,12 +148,12 @@ class Doc_Read():
 
 	def read_line(self, line):
 		liner = ''
-		luxx = cv2.erode(line.copy(), self.KernelUp, iterations=3)
+		luxx = cv2.erode(line.copy(), self.KernelUp, iterations=4)
 
 		cv2.GaussianBlur(luxx, (3, 3), 0)
 
-		line = self.bord_app(line)
-		luxx = self.bord_app(luxx)
+		line = self.bord_app(line, size = 20)
+		luxx = self.bord_app(luxx, size = 20)
 
 		_, trahs = cv2.threshold(luxx.copy(), 100, 255, cv2.THRESH_BINARY)
 
@@ -186,8 +191,10 @@ class Doc_Read():
 			if line.shape != image.shape:
 				w1, w2 = line.shape
 				if w2 > w1*2:
-					line = imutils.resize(line, height=17)
+					line = cv2.resize(line, (line.shape[1], 17))
 					if w2 > 150 :
+						if line.shape[1] > 700:
+							line = cv2.resize(line, (650, 17))
 						line = self.read_line(line)
 						text += line
 						text += '\n'
