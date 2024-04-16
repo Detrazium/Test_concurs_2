@@ -1,6 +1,11 @@
+from typing import Any
+
 import keras
 import cv2
 import numpy as np
+from cv2 import Mat, UMat
+from numpy import ndarray, dtype, generic
+
 from Token_word import OCR_TOKEN
 import imutils
 from imutils import contours
@@ -8,7 +13,7 @@ from imutils import contours
 
 def TES(img, item=None):
 	if item != None:
-		print(f'|ITEM|:{item}:|')
+		print(f'|ITEM|:{item}')
 	cv2.imshow(f'{img.shape}|TEST READ:', img)
 	cv2.waitKey()
 	cv2.destroyAllWindows()
@@ -23,42 +28,58 @@ class Doc_Read():
 		self.KernelUp = cv2.getStructuringElement(cv2.MORPH_RECT, [2, 10])
 		self.KernelUpOne = cv2.getStructuringElement(cv2.MORPH_RECT, [1, 20])
 
+		self.KernelEllipse_litera = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, [5, 5])
+
 		self.KernelHAT = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, [20, 20])
-	def bord_app(self,item, size =10):
+	def bord_app(self,item, size =10, top = None, bottom=None, left = None, right = None):
+		if size == None:
+			s1 = top
+			s2 = bottom
+			s3 = left
+			s4 = right
+		elif size != None:
+			s1 = size
+			s2 = size
+			s3 = size
+			s4 = size
 		item = cv2.copyMakeBorder(
 			item,
-			top=size,
-			bottom=size,
-			left=size,
-			right=size,
+			top=s1,
+			bottom=s2,
+			left=s3,
+			right=s4,
 			value=(255, 255, 255),
 			borderType=cv2.BORDER_CONSTANT
 		)
 		return item
 	def find(self, image):
 		litary = ''
-		img = self.bord_app(image, size=20)
+		itemstest = 'top = 20, bottom= 20, left= 40, right=40'
 
-		img = cv2.erode(img, None, iterations=2)
-		img = cv2.threshold(img, 190, 255, cv2.THRESH_BINARY)[1]
+		img = self.bord_app(image, size=None, top = 30, bottom= 50, left= 50, right=40)
+
+		imgg = img.copy()
+
+		img = cv2.erode(img, self.KernelEllipse_litera, iterations=1)
+		# cv2.imshow('ims', img)
+		img = cv2.threshold(img, 143, 255, cv2.THRESH_BINARY)[1]
+
 		img = cv2.GaussianBlur(img, (3, 3), 0)
 		img = cv2.resize(img, (28, 28))
+		# cv2.imshow('images', img)
 		num = self.Model(np.expand_dims(img, axis=0))
 		num = np.argmax(num)
 		litary += OCR_TOKEN(num).get_lit()
-		#
-		#
+
+
 		# print(litary, '||', num)
-		# cv2.imshow('iMG', img)
-		# cv2.waitKey()
-		# cv2.destroyAllWindows()
+		# TES(imgg)
+
 		return litary
 
 
 	def strip_literaNUM(self, image):
 		literas = ''
-		lit_cont = []
-
 		img = image.copy()
 		w1, w2 = img.shape
 		cat = w2//2
@@ -75,14 +96,19 @@ class Doc_Read():
 		img = image.copy()
 
 		img = cv2.GaussianBlur(img, (3,3), 0)
-		img = cv2.threshold(img, 40, 255, cv2.THRESH_BINARY)[1]
 
-		img = cv2.erode(img, self.KernelUp, iterations=3)
+		img = cv2.threshold(img, 130, 255, cv2.THRESH_BINARY)[1]
+
+		# cv2.imshow('img', img)
+		img = cv2.erode(img, self.KernelUp, iterations=4)
 		img = cv2.erode(img, self.KernelUpOne, iterations=15)
 
+
+		# cv2.imshow('imgf', img)
 		img = self.bord_app(img, size=30)
 		image = self.bord_app(image, size=30)
 
+		# TES(img, '|ELLIps|')
 
 		cont,_ = cv2.findContours(img, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 		cont = self.dock_sort_list(cont)
@@ -91,12 +117,18 @@ class Doc_Read():
 
 			x, y, w, h = cv2.boundingRect(con)
 			img = image[y:y+h, x:x+w]
+
 			e1, e2 = img.shape
 
+			# cat = 280
+			cat = e1/2 + e1/4
+
 			if 250 < e1 < 289:
-				if e2 > 280:
+				if e2 > cat:
+					# print('strip')
 					lit += self.strip_literaNUM(img)
 				else:
+					# print('NOstrip')
 					lit += self.find(img)
 		return lit
 	def dock_sort_list(self, cnt, typer='right_ligth'):
@@ -113,57 +145,76 @@ class Doc_Read():
 
 	def read_litera(self, word):
 		texts = ''
-
-		res1 = imutils.resize(word, height=278)
-
+		res1 = imutils.resize(word, height=78)
 		res = cv2.GaussianBlur(res1, (3, 3), 0)
-		res = cv2.dilate(res, self.KernelXshare, iterations=1)
 		res = cv2.erode(res, self.KernelUpOne, iterations=20)
-
 		res = self.bord_app(res, size=20)
 		img_org = self.bord_app(res1.copy(), size= 20)
 
-		_,Trash =cv2.threshold(res, 180, 200, cv2.THRESH_BINARY)
-
+		_,Trash =cv2.threshold(res, 190, 200, cv2.THRESH_BINARY)
 		cont,_ =cv2.findContours(Trash, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-
 		cont = self.dock_sort_list(cont)
 
-		for con in cont:
+		for ind, con in enumerate(cont[1:]):
 			x, y, w, h =cv2.boundingRect(con)
 			img = img_org[y:y+h, x:x+w]
 			img = imutils.resize(img, height=205)
 			w1, w2 = img.shape
-			cv2.imshow('img', img)
-			if 80 < w2 < 390:
-				if w2 > w1*0.9:
-					litera = self.Strip_one(img)
 
-					'''CLIPED TO WORK!'''
+			if 70 < w2 < 390:
+				litera = self.Strip_one(img)
 
-				else:
-					litera = self.find(img)
+				texts += litera
+		return texts
+
+	def TEST_read_litera(self, word):
+		texts = ''
+		res1 = imutils.resize(word, height=78)
+		res = cv2.threshold(res1, 160, 255, cv2.THRESH_BINARY)[1]
+
+		kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (2, 1))
+		res = cv2.dilate(res, kernel=kernel, iterations=1)
+
+		res =cv2.erode(res, self.KernelUpOne, iterations=10)
+
+		# RES_TEST = self.bord_app(cv2.cvtColor(res1.copy(), cv2.COLOR_GRAY2BGR), size=20)
+		res = self.bord_app(res, size=20)
+		img_org = self.bord_app(res1.copy(), size=20)
+
+		cont, _ = cv2.findContours(res, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+		cont = self.dock_sort_list(cont)
+
+		for ind, con in enumerate(cont[1:]):
+			x, y, w, h = cv2.boundingRect(con)
+			img = img_org[y:y + h, x:x + w]
+			img = imutils.resize(img, height=205)
+
+			w1, w2 = img.shape
+			if 70 < w2 < 390:
+				litera = self.Strip_one(img)
+
 				texts += litera
 		return texts
 
 	def read_line(self, line):
 		liner = ''
-		luxx = cv2.erode(line.copy(), self.KernelUp, iterations=4)
 
+		luxx = cv2.erode(line.copy(), self.KernelUp, iterations=4)
 		cv2.GaussianBlur(luxx, (3, 3), 0)
 
 		line = self.bord_app(line, size = 20)
 		luxx = self.bord_app(luxx, size = 20)
 
-		_, trahs = cv2.threshold(luxx.copy(), 100, 255, cv2.THRESH_BINARY)
+		_, trahs = cv2.threshold(luxx.copy(), 110, 255, cv2.THRESH_BINARY)
 
 		cont = cv2.findContours(trahs, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)[0]
 		cont = self.dock_sort_list(cont, typer='right_ligth')
 		for ind, con in enumerate(cont):
 			x, y, w, h = cv2.boundingRect(con)
 			imm = line[y:y+h, x:x+w]
+
 			if imm.shape[0]<34:
-				word = self.read_litera(imm)
+				word = self.TEST_read_litera(imm)
 				liner += word
 				if ind != len(cont):
 					liner += ' '
@@ -174,30 +225,40 @@ class Doc_Read():
 		return img
 	def read_text(self, image):
 		text = ''
+		sizeB = 25
+		image_real = image.copy()
+
 		gray = cv2.erode(image, self.KernelXshare, iterations=3)
 		gray = cv2.GaussianBlur(gray, (3, 3), 0)
 		_, trash = cv2.threshold(gray, 90, 255, cv2.THRESH_BINARY)
 
-		trash = self.bord_app(trash, size=25)
-		image = self.bord_app(image, size=25)
+		"""____________________________Тест______________"""
+		# TES(cv2.resize(trash, (600, 1000)))
+
+		trash = self.bord_app(trash, size=sizeB)
+		image = self.bord_app(image, size=sizeB)
 
 		cont, _ = cv2.findContours(trash, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 		cont = self.dock_sort_list(cont, 'Up_down')
 
 		for con in cont:
 			x, y, w, h = cv2.boundingRect(con)
+			imgas = cv2.cvtColor(image.copy(), cv2.COLOR_GRAY2BGR)
+			imgas = cv2.rectangle(imgas, (x, y), (x+w, y+h), (0, 255, 0))
 
 			line = image[y: y + h, x: x + w]
-			if line.shape != image.shape:
+			if line.shape < image_real.shape:
 				w1, w2 = line.shape
 				if w2 > w1*2:
 					line = cv2.resize(line, (line.shape[1], 17))
-					if w2 > 150 :
-						if line.shape[1] > 700:
+					if w2 > 50 :
+						if w2 > 700:
 							line = cv2.resize(line, (650, 17))
+
 						line = self.read_line(line)
 						text += line
 						text += '\n'
+						cv2.waitKey()
 		return text
 	def read_doc(self):
 		text = ''
@@ -205,10 +266,11 @@ class Doc_Read():
 		image = self.image
 
 		"""timer!"""
-		image = self.standartize(image)
+		# image = self.standartize(image)
 		"""timer!"""
 
 		image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+
 		text += self.read_text(image)
 
 		if text.replace('\n', '') == ' ':
@@ -222,7 +284,9 @@ class Doc_Read():
 def main():
 	path1 = r"C:\Datasets\hhh.jpg"
 	path2 = r"C:\Datasets\Gimage.jpeg"
-	text = Doc_Read(path1).read_doc()
+	path3 = r"C:\Datasets\Pasports\0.jpeg"
+	path4 = r"C:\Datasets\wFQOjKy4Ibg.jpg"
+	text = Doc_Read().read_doc()
 	print(text)
 
 if __name__ == '__main__':

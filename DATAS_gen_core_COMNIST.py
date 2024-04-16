@@ -9,6 +9,7 @@ from skimage.transform import AffineTransform, warp, rotate
 import numpy as np
 import shutil
 from Token_word import OCR_TOKEN
+import requests
 class Generate_dataset():
 	"""
 	Gen to need min(115 000):

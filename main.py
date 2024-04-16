@@ -11,10 +11,13 @@ def Creater_Model():
 
 
 def Chain_functions():
-	# path = r"C:\Datasets\Pasports\0.jpeg"
+	path1 = r"C:\Datasets\hhh.jpg"
+	path2 = r"C:\Datasets\Gimage.jpeg"
+	path3 = r"C:\Datasets\Pasports\3.jpeg"
+	path4 = r"C:\Datasets\wFQOjKy4Ibg.jpg"
 	path = r"C:\Datasets\Gimage.jpeg"
 	# text = OCR_Model_find_litary(path).get_items()
-	text = Doc_Read(path).read_doc()
+	text = Doc_Read(path3).read_doc()
 	print(text)
 
 
