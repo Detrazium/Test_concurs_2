@@ -57,7 +57,6 @@ class Doc_Read():
 		itemstest = 'top = 20, bottom= 20, left= 40, right=40'
 
 		img = self.bord_app(image, size=None, top = 30, bottom= 50, left= 50, right=40)
-
 		imgg = img.copy()
 
 		img = cv2.erode(img, self.KernelEllipse_litera, iterations=1)
@@ -74,7 +73,6 @@ class Doc_Read():
 
 		# print(litary, '||', num)
 		# TES(imgg)
-
 		return litary
 
 
@@ -102,7 +100,6 @@ class Doc_Read():
 		# cv2.imshow('img', img)
 		img = cv2.erode(img, self.KernelUp, iterations=4)
 		img = cv2.erode(img, self.KernelUpOne, iterations=15)
-
 
 		# cv2.imshow('imgf', img)
 		img = self.bord_app(img, size=30)
@@ -170,20 +167,20 @@ class Doc_Read():
 	def TEST_read_litera(self, word):
 		texts = ''
 		res1 = imutils.resize(word, height=78)
-		res = cv2.threshold(res1, 160, 255, cv2.THRESH_BINARY)[1]
+		cv2.imshow('res1', res1)
+		res = cv2.threshold(res1, 130, 255, cv2.THRESH_BINARY)[1]
+		cv2.imshow('ress', res)
 
 		kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (2, 1))
 		res = cv2.dilate(res, kernel=kernel, iterations=1)
+		res = cv2.erode(res, self.KernelUpOne, iterations=10)
+		TES(res, '|LLL|')
 
-		res =cv2.erode(res, self.KernelUpOne, iterations=10)
-
-		# RES_TEST = self.bord_app(cv2.cvtColor(res1.copy(), cv2.COLOR_GRAY2BGR), size=20)
 		res = self.bord_app(res, size=20)
 		img_org = self.bord_app(res1.copy(), size=20)
 
 		cont, _ = cv2.findContours(res, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 		cont = self.dock_sort_list(cont)
-
 		for ind, con in enumerate(cont[1:]):
 			x, y, w, h = cv2.boundingRect(con)
 			img = img_org[y:y + h, x:x + w]
@@ -196,28 +193,68 @@ class Doc_Read():
 				texts += litera
 		return texts
 
-	def read_line(self, line):
-		liner = ''
+	# def read_line(self, line):
+	# 	liner = ''
+	#
+	# 	luxx = cv2.erode(line.copy(), self.KernelUp, iterations=4)
+	# 	cv2.GaussianBlur(luxx, (3, 3), 0)
+	#
+	# 	line = self.bord_app(line, size = 20)
+	# 	luxx = self.bord_app(luxx, size = 20)
+	#
+	# 	cv2.imshow('line', line)
+	# 	cv2.imshow('line2', luxx)
+	#
+	# 	_, trahs = cv2.threshold(luxx.copy(), 110, 255, cv2.THRESH_BINARY)
+	#
+	# 	TES(trahs)
+	#
+	# 	cont = cv2.findContours(trahs, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)[0]
+	# 	cont = self.dock_sort_list(cont, typer='right_ligth')
+	# 	for ind, con in enumerate(cont):
+	# 		x, y, w, h = cv2.boundingRect(con)
+	# 		imm = line[y:y+h, x:x+w]
+	#
+	# 		if imm.shape[0]<34:
+	# 			word = self.TEST_read_litera(imm)
+	# 			liner += word
+	# 			if ind != len(cont):
+	# 				liner += ' '
+	# 	return liner
 
-		luxx = cv2.erode(line.copy(), self.KernelUp, iterations=4)
+	def TEST_topHad_read_line(self, line):
+		liner = ''
+		kernel = cv2.getStructuringElement(cv2.MORPH_RECT, [10, 10])
+		tophat = cv2.morphologyEx(line, cv2.MORPH_BLACKHAT, kernel=kernel, iterations=1)
+		tophat= cv2.threshold(tophat, 40, 255, cv2.THRESH_BINARY_INV | cv2.THRESH_OTSU)[1]
+		# cv2.imshow('tophat', tophat)
+
+		luxx = cv2.erode(tophat.copy(), self.KernelUp, iterations=4)
 		cv2.GaussianBlur(luxx, (3, 3), 0)
+
 
 		line = self.bord_app(line, size = 20)
 		luxx = self.bord_app(luxx, size = 20)
+		# cv2.imshow('eroded', luxx)
+		# TES(line, '|PASS|')
 
-		_, trahs = cv2.threshold(luxx.copy(), 110, 255, cv2.THRESH_BINARY)
-
-		cont = cv2.findContours(trahs, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)[0]
+		cont = cv2.findContours(luxx, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)[0]
 		cont = self.dock_sort_list(cont, typer='right_ligth')
 		for ind, con in enumerate(cont):
 			x, y, w, h = cv2.boundingRect(con)
 			imm = line[y:y+h, x:x+w]
-
 			if imm.shape[0]<34:
-				word = self.TEST_read_litera(imm)
+				word = self.read_litera(imm)
 				liner += word
 				if ind != len(cont):
 					liner += ' '
+
+
+		# cv2.imshow('luxx', luxx)
+		# cv2.imshow('line',line)
+		# TES(tophat)
+
+
 		return liner
 	def standartize(self, img):
 		img = cv2.morphologyEx(img, cv2.MORPH_TOPHAT, kernel=self.KernelHAT, iterations=1)
@@ -230,7 +267,7 @@ class Doc_Read():
 
 		gray = cv2.erode(image, self.KernelXshare, iterations=3)
 		gray = cv2.GaussianBlur(gray, (3, 3), 0)
-		_, trash = cv2.threshold(gray, 90, 255, cv2.THRESH_BINARY)
+		_, trash = cv2.threshold(gray, 120, 255, cv2.THRESH_BINARY)
 
 		"""____________________________Тест______________"""
 		# TES(cv2.resize(trash, (600, 1000)))
@@ -241,11 +278,12 @@ class Doc_Read():
 		cont, _ = cv2.findContours(trash, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 		cont = self.dock_sort_list(cont, 'Up_down')
 
+		imgas = cv2.cvtColor(image.copy(), cv2.COLOR_GRAY2BGR)
 		for con in cont:
 			x, y, w, h = cv2.boundingRect(con)
-			imgas = cv2.cvtColor(image.copy(), cv2.COLOR_GRAY2BGR)
 			imgas = cv2.rectangle(imgas, (x, y), (x+w, y+h), (0, 255, 0))
 
+		# TES(cv2.resize(imgas, (600, 900)))
 			line = image[y: y + h, x: x + w]
 			if line.shape < image_real.shape:
 				w1, w2 = line.shape
@@ -254,8 +292,7 @@ class Doc_Read():
 					if w2 > 50 :
 						if w2 > 700:
 							line = cv2.resize(line, (650, 17))
-
-						line = self.read_line(line)
+						line = self.TEST_topHad_read_line(line)
 						text += line
 						text += '\n'
 						cv2.waitKey()
@@ -284,7 +321,7 @@ class Doc_Read():
 def main():
 	path1 = r"C:\Datasets\hhh.jpg"
 	path2 = r"C:\Datasets\Gimage.jpeg"
-	path3 = r"C:\Datasets\Pasports\0.jpeg"
+	path3 = r"C:\Datasets\Pasports\4.png"
 	path4 = r"C:\Datasets\wFQOjKy4Ibg.jpg"
 	text = Doc_Read().read_doc()
 	print(text)
